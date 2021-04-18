@@ -1,0 +1,12 @@
+- name: "Install nginx"
+  dnf:
+    name: "nginx" 
+    state: "present"
+  become: "yes"
+
+- name: "Enable and Start nginx"
+  systemd:
+    name: "nginx"
+    enabled: "yes"
+    state: "started"
+  become: "yes"
