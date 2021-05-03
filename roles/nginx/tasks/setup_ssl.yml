@@ -1,0 +1,5 @@
+- name: "Install certbot"
+  become: "yes"
+  dnf:
+    name: "python3-certbot-nginx" 
+    state: "present"

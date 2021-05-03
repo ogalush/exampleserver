@@ -1,0 +1,14 @@
+#!/bin/bash
+
+## Ref
+## https://www.mydns.jp/#howtouse
+
+## Settings
+MID='{{ mydns_master_id }}'
+PWD='{{ mydns_master_pw }}'
+METHOD='GET'
+## Settings-END
+
+## Update DDNS IP Address
+/usr/bin/curl -X ${METHOD} --fail "https://${MID}:${PWD}@ipv4.mydns.jp/login.html" 2>&1 | logger -t DDNS_UPDATE
+## Update DDNS IP Address-END

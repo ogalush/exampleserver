@@ -1,0 +1,28 @@
+- name: "Prepare DDNS Directory"
+  become: "yes"
+  file:
+    path: "/opt/mydns"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+
+- name: "Set Update DDNS Script."
+  become: "yes"
+  template:
+    src: "update_mydns.sh.j2"
+    dest: "/opt/mydns/update_mydns.sh"
+    owner: "root"
+    group: "root"
+    mode: 0700
+
+- name: "Set Update DDNS Crontab"
+  become: "yes"
+  cron:
+    name: "Update DDNS"
+    backup: "No"
+    cron_file: "/etc/cron.d/update_mydns"
+    minute: "0"
+    user: "root"
+    job: "bash /opt/mydns/update_mydns.sh 2>&1 | logger -t UPDATE_DDNS"
+    state: "present"
