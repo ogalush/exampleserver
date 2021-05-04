@@ -1,5 +1,83 @@
-- name: "Install certbot"
+- name: "Install rpms"
   become: "yes"
   dnf:
-    name: "python3-certbot-nginx" 
+    name: "python3-certbot-nginx,postfix,mailx" 
     state: "present"
+
+## SSL証明書更新Cronの結果通知向け
+- name: "Enable Postfix"
+  become: "yes"
+  systemd:
+    name: "postfix"
+    enabled: "yes"
+    state: "started"
+
+
+## SSL証明書の新規作成 or 更新フラグ
+- name: "Exist Check Certificate Directory"
+  become: "yes"
+  shell: "ls -ld /etc/letsencrypt/live/{{ nginx_server_name }}"
+  register: exist_certificate_dir
+  ignore_errors: "true"
+
+
+## SSL証明書(新規作成)
+- name: "Initialize Certificate (dry-run)"
+  become: "yes"
+  shell: "/usr/bin/certbot certonly --webroot -w {{ nginx_server_root }} -d {{ nginx_server_name }} -m {{ nginx_server_admin }} --agree-tos -n --dry-run"
+  when: exist_certificate_dir is failed
+
+- name: "Initialize Certificate (Create)"
+  become: "yes"
+  shell: "/usr/bin/certbot certonly --webroot -w {{ nginx_server_root }} -d {{ nginx_server_name }} -m {{ nginx_server_admin }} --agree-tos -n"
+  when: exist_certificate_dir is failed
+
+
+## SSL証明書(更新)
+## 参考: https://qiita.com/tmatsumot/items/aca49d99558d2646ef36
+## certbot renew --force-renewしない.
+## 証明書更新Rate制限に引っかかり更新できなくなる可能性があるため.
+- name: "Update Certificate (dry-run)"
+  become: "yes"
+  shell: "/usr/bin/certbot renew --dry-run"
+  when: exist_certificate_dir is success
+
+- name: "Update Certificate (Update)"
+  become: "yes"
+  shell: "/usr/bin/certbot renew"
+  when: exist_certificate_dir is success
+
+
+- name: "Set crontab for Update Certification"
+  become: "yes"
+  cron:
+    name: "Update Certification"
+    cron_file: "/etc/cron.d/update_ssl_cert"
+    backup: "No"
+    minute: "5"
+    hour: "0"
+    weekday: "0"
+    user: "root"
+    job: '/usr/bin/certbot renew --webroot -w {{ nginx_server_root }} --post-hook "/usr/bin/systemctl reload nginx" 2>&1 | mail -s "Update SSLCert information {{ nginx_server_name }} `date -I`" ogalush@localhost'
+    state: "present"
+
+
+## SSL設定の反映
+- name: "Set ssl.conf"
+  become: "yes"
+  template:
+    src: "ssl.conf.j2"
+    dest: "/etc/nginx/conf.d/ssl.conf"
+    owner: "root"
+    group: "root"
+    mode: 0644
+
+- name: "Syntax check for nginx"
+  become: "yes"
+  shell: "/usr/sbin/nginx -t"
+
+- name: "Apply nginx"
+  become: "yes"
+  systemd:
+    name: "nginx"
+    state: "restarted"

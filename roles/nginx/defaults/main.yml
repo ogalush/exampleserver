@@ -1,1 +1,2 @@
-server_name: "oganet.mydns.jp"
+nginx_server_name: "oganet.mydns.jp"
+nginx_server_root: "/usr/share/nginx/html"
