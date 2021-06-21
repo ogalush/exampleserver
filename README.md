@@ -33,9 +33,9 @@ $ ansible-playbook -i '192.168.3.139,' cent8init.yml --user=centos --become -kK
 ## WebServer構築
 nginxとDDNS設定を入れる
 ```
-$ ansible-playbook -i hosts/oganetwork install_webserver.yml -bK --ask-vault-pass --list-hosts
+$ ansible-playbook -i hosts/oganetwork install_webserver.yml --skip-tags='setup_ssl' -bK --ask-vault-pass --list-hosts
 → 構築対象のみであること.
-$ ansible-playbook -i hosts/oganetwork install_webserver.yml -bK --ask-vault-pass
+$ ansible-playbook -i hosts/oganetwork install_webserver.yml --skip-tags='setup_ssl' -bK --ask-vault-pass
 → Playbookが成功すること.
 ```
 
