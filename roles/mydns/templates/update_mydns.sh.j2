@@ -10,5 +10,6 @@ METHOD='GET'
 ## Settings-END
 
 ## Update DDNS IP Address
+/usr/bin/curl -X ${METHOD} --fail "https://${MID}:${PWD}@ipv6.mydns.jp/login.html" 2>&1 | logger -t DDNS_UPDATE
 /usr/bin/curl -X ${METHOD} --fail "https://${MID}:${PWD}@ipv4.mydns.jp/login.html" 2>&1 | logger -t DDNS_UPDATE
 ## Update DDNS IP Address-END
